@@ -6,11 +6,21 @@ library dartpad.dialogs;
 
 import 'dart:async';
 import 'dart:html';
+import 'dart:convert' as convert;
 
 import 'elements/elements.dart';
 import 'sharing/gists.dart';
 import 'sharing/mutable_gist.dart';
 import 'core/keys.dart';
+
+import 'dart:html';
+
+class NullTreeSanitizer implements NodeTreeSanitizer {
+
+  void sanitizeTree(Node node) {
+
+  }
+}
 
 /**
  * Show an OK / Cancel dialog, and return the option that the user selected.
@@ -64,6 +74,8 @@ class SharingDialog extends DDialog {
   DInput _padUrl;
   DInput _gistUrl;
 
+  DElement imageholder;
+
   SharingDialog(this.gistContainer, this.gistController) : super(title: 'Sharing') {
     element.classes.toggle('sharing-dialog', true);
 
@@ -92,6 +104,10 @@ class SharingDialog extends DDialog {
     inputGroup = div.add(new DElement.tag('div'))..layoutHorizontal()..flex();
     _gistUrl = inputGroup.add(new DInput.input(type: 'text'))..flex()..readonly();
     _gistUrl.onClick.listen((_) => _gistUrl.selectAll());
+
+    div = _div.add(new DElement.tag('div', classes: 'row')..layoutHorizontal());
+    imageholder = new DElement.tag('div');
+    div.add(imageholder);
   }
 
   void show() {
@@ -128,6 +144,12 @@ class SharingDialog extends DDialog {
       content.add(_div);
       _padUrl.value = 'https://dartpad.dartlang.org/${gist.id}';
       _gistUrl.value = gist.html_url;
+
+      String skyTarget =
+        Uri.encodeFull('sky://gist.githubusercontent.com/raw/${gist.id}');
+      imageholder.element.setInnerHtml(
+        '<img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=$skyTarget" />'
+      , treeSanitizer : new NullTreeSanitizer());
 
       buttonArea.add(new SpanElement()..attributes['flex'] = '');
       buttonArea.add(_closeButton);
